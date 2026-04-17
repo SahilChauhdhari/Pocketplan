@@ -24,6 +24,22 @@
   --warn: #F59E0B;
   --danger: #EF4444;
 }
+
+[data-theme="sunset"] {
+  --primary: #EA580C;       /* Burnt Orange */
+  --primary-light: #F97316;
+  --primary-dark: #C2410C;
+  --secondary: #EAB308;     /* Warm Yellow */
+  --secondary-light: #FDE047;
+  --bg: #1C1917;            /* Warm dark gray */
+  --card: #292524;
+  --border: #44403C;
+  --text: #FAFAF9;
+  --muted: #A8A29E;
+  --muted2: #78716C;
+  --warn: #EAB308;
+  --danger: #EF4444;
+}
 html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
 h1,h2,h3{font-weight:700}
 button{font-family:inherit;cursor:pointer}
@@ -210,6 +226,62 @@ input,textarea,select{font-family:inherit}
 <body>
 <div id="toast-container"></div>
 
+<!-- PROFILE MODAL -->
+<div id="profile-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s;" onclick="if(event.target===this)closeProfile()">
+  <div class="card fade-in" style="width:100%; max-width:340px; position:relative; margin:20px;" onclick="event.stopPropagation()">
+    <button onclick="closeProfile()" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--muted); font-size:18px; line-height:1;">✕</button>
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+      <div class="user-avatar" id="modal-avatar" style="width:56px; height:56px; font-size:24px;">A</div>
+      <div style="flex:1; min-width:0;">
+        <h2 id="modal-name" style="font-size:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">User Name</h2>
+        <div id="modal-email" style="color:var(--muted2); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">user@example.com</div>
+      </div>
+    </div>
+    <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <span style="color:var(--muted); font-size:13px;">🎂 Birthday</span>
+        <strong id="modal-birthday" style="font-size:13px; color:var(--text);">-</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <span style="color:var(--muted); font-size:13px;">❤️ Health Score</span>
+        <strong id="modal-health" style="font-size:13px;">-</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FRIEND MODAL -->
+<div id="friend-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s;" onclick="if(event.target===this)closeFriend()">
+  <div class="card fade-in" style="width:100%; max-width:420px; position:relative; margin:20px;" onclick="event.stopPropagation()">
+    <button onclick="closeFriend()" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--muted); font-size:18px; line-height:1;">✕</button>
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+      <div class="user-avatar" id="friend-avatar" style="width:56px; height:56px; font-size:24px;">F</div>
+      <div style="flex:1; min-width:0;">
+        <h2 id="friend-name" style="font-size:20px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Name</h2>
+        <div style="font-size:13px; color:var(--muted2); margin-top:2px;">Connected Friend</div>
+      </div>
+    </div>
+    
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:12px;">
+         <div style="font-size:11px; color:var(--muted2);">Health Score</div>
+         <div id="friend-health" style="font-size:22px; font-weight:800; margin-top:4px;">0</div>
+      </div>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:12px;">
+         <div style="font-size:11px; color:var(--muted2);">Total Saved</div>
+         <div id="friend-saved" style="font-size:18px; font-weight:800; color:var(--secondary); margin-top:4px;">₹0</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:16px;">
+      <h3 style="font-size:13px; margin-bottom:12px;">Top Spending Categories</h3>
+      <div id="friend-cats" style="display:flex; flex-direction:column; gap:10px;">
+         <!-- Populated via JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- AUTH PAGE -->
 <div id="auth-page" class="auth-page">
   <div class="auth-glow"></div>
@@ -252,6 +324,7 @@ input,textarea,select{font-family:inherit}
       <button class="mobile-nav-btn active" id="mob-home" onclick="navigate('dashboard')">🏠</button>
       <button class="mobile-nav-btn" id="mob-add" onclick="navigate('add')">➕</button>
       <button class="mobile-nav-btn" id="mob-insights" onclick="navigate('insights')">📊</button>
+      <button class="mobile-nav-btn theme-toggle-btn-mob" onclick="toggleTheme()" title="Toggle Theme">🎨</button>
     </div>
   </div>
 
@@ -265,15 +338,45 @@ input,textarea,select{font-family:inherit}
       <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')"><span class="nav-icon">🏠</span>Dashboard</button>
       <button class="nav-item" id="nav-add" onclick="navigate('add')"><span class="nav-icon">➕</span>Add Expense</button>
       <button class="nav-item" id="nav-insights" onclick="navigate('insights')"><span class="nav-icon">📊</span>Insights</button>
+      
+      <!-- Friends Section -->
+      <div style="margin-top:20px; padding:0 14px;">
+        <div style="font-size:11px; font-weight:700; color:var(--muted2); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Connected Friends</div>
+        
+        <div onclick="showFriendAnalytics('Rahul', 'R', 92, '#22C55E', '#22C55E22')" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" style="display:flex; align-items:center; justify-content:space-between; margin:-6px -8px 6px -8px; padding:6px 8px; border-radius:8px; cursor:pointer; transition:background 0.15s;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; border-radius:50%; background:#22C55E22; color:#22C55E; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">R</div>
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Rahul</span>
+          </div>
+          <span class="badge badge-green" style="font-size:10px;" title="Health Score">92</span>
+        </div>
+
+        <div onclick="showFriendAnalytics('Sneha', 'S', 68, '#F59E0B', '#F59E0B22')" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" style="display:flex; align-items:center; justify-content:space-between; margin:-6px -8px 6px -8px; padding:6px 8px; border-radius:8px; cursor:pointer; transition:background 0.15s;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; border-radius:50%; background:#F59E0B22; color:#F59E0B; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">S</div>
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Sneha</span>
+          </div>
+          <span class="badge badge-amber" style="font-size:10px;" title="Health Score">68</span>
+        </div>
+
+        <div onclick="showFriendAnalytics('Mehdi', 'M', 45, '#EF4444', '#EF444422')" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" style="display:flex; align-items:center; justify-content:space-between; margin:-6px -8px 0 -8px; padding:6px 8px; border-radius:8px; cursor:pointer; transition:background 0.15s;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; border-radius:50%; background:#EF444422; color:#EF4444; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">M</div>
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Mehdi</span>
+          </div>
+          <span class="badge badge-red" style="font-size:10px;" title="Health Score">45</span>
+        </div>
+      </div>
     </nav>
     <div class="sidebar-user">
-      <div class="user-row">
+      <div class="user-row" onclick="showProfile()" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" style="cursor:pointer; padding:8px; margin:-8px -8px 8px -8px; border-radius:12px; transition:background 0.15s;">
         <div class="user-avatar" id="user-avatar">A</div>
         <div style="flex:1;min-width:0">
           <div class="user-name" id="user-name-display">—</div>
           <div class="user-email" id="user-email-display">—</div>
         </div>
       </div>
+      <button class="logout-btn theme-toggle-btn" onclick="toggleTheme()" style="margin-bottom:4px">🎨 Switch to Sunset Theme</button>
       <button class="logout-btn" onclick="logout()">🚪 Sign out</button>
     </div>
   </aside>
@@ -304,7 +407,7 @@ const uid=()=>`id-${Date.now()}-${++_uid}`;
 /* ── Store ── */
 let store={
   currentUser: null,
-  users: [{id:'user-1',name:'Arjun Sharma',email:'demo@pocketplan.in',password:'demo123',budget:30000,savingsGoal:10000,streak:5,lastActiveDate:''}],
+  users: [{id:'user-1',name:'Arjun Sharma',email:'demo@pocketplan.in',password:'demo123',budget:30000,savingsGoal:10000,streak:5,lastActiveDate:'',birthday:'15 Aug 1995'}],
   expenses: [],
   savings: [],
 };
@@ -442,8 +545,89 @@ function apiGetInsights(){
 let authMode='login';
 let currentPage='dashboard';
 let dashCharts={};
+let currentTheme='cyber';
 
 const fmt=(n)=>`₹${Number(n).toLocaleString('en-IN')}`;
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'cyber' ? 'sunset' : 'cyber';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  const btns = document.querySelectorAll('.theme-toggle-btn');
+  btns.forEach(btn => {
+    btn.innerHTML = currentTheme === 'cyber' ? '🎨 Switch to Sunset Theme' : '🎨 Switch to Cyber Theme';
+  });
+  toast('Theme switched to ' + (currentTheme === 'cyber' ? 'Midnight Cyber' : 'Sunset Warm'));
+}
+
+function showProfile() {
+  if(!store.currentUser) return;
+  const user = store.currentUser;
+  const ins = apiGetInsights();
+  
+  document.getElementById('modal-avatar').textContent = (user.name || '?')[0].toUpperCase();
+  document.getElementById('modal-name').textContent = user.name;
+  document.getElementById('modal-email').textContent = user.email;
+  document.getElementById('modal-birthday').textContent = user.birthday || 'Not specified';
+  
+  const healthEl = document.getElementById('modal-health');
+  healthEl.textContent = ins.healthScore + '/100';
+  healthEl.style.color = ins.healthScore >= 75 ? '#22C55E' : ins.healthScore >= 50 ? '#F59E0B' : '#EF4444';
+  
+  const modal = document.getElementById('profile-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => modal.style.opacity = '1', 10);
+}
+
+function closeProfile() {
+  const modal = document.getElementById('profile-modal');
+  modal.style.opacity = '0';
+  setTimeout(() => modal.style.display = 'none', 300);
+}
+
+function showFriendAnalytics(name, initial, health, color, bg) {
+  document.getElementById('friend-name').textContent = name + "'s Analytics";
+  
+  const av = document.getElementById('friend-avatar');
+  av.textContent = initial;
+  av.style.color = color;
+  av.style.background = bg;
+
+  const hEl = document.getElementById('friend-health');
+  hEl.textContent = health + '/100';
+  hEl.style.color = color;
+
+  // Generate some random mocked info based on health
+  const saved = Math.floor((health / 100) * 30000) + Math.floor(Math.random() * 5000);
+  document.getElementById('friend-saved').textContent = '₹' + saved.toLocaleString('en-IN');
+  
+  // Random categories representation
+  const cats = ['Food', 'Shopping', 'Entertainment'];
+  const emojis = ['🍔', '🛍️', '🎬'];
+  let innerHtml = '';
+  cats.forEach((c, i) => {
+    let pct = Math.floor(Math.random() * 40) + 10;
+    innerHtml += `<div style="margin-bottom:8px;">
+       <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+         <span>${emojis[i]} ${c}</span>
+         <span style="font-weight:600;">${pct}%</span>
+       </div>
+       <div class="prog-track" style="height:6px;">
+         <div class="prog-fill" style="width:${pct}%; background:${color};"></div>
+       </div>
+    </div>`;
+  });
+  document.getElementById('friend-cats').innerHTML = innerHtml;
+
+  const modal = document.getElementById('friend-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => modal.style.opacity = '1', 10);
+}
+
+function closeFriend() {
+  const modal = document.getElementById('friend-modal');
+  modal.style.opacity = '0';
+  setTimeout(() => modal.style.display = 'none', 300);
+}
 
 function toast(msg,type='success'){
   const c=document.getElementById('toast-container');
